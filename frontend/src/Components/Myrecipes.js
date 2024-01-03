@@ -113,6 +113,8 @@ export default function Myrecipes() {
                   userfirstname={userfirstname}
                   userlastname={userlastname}
                   image={imageData[item.image]}
+                  type="edit"
+                  userid={currentuserid}
                 ></RecipeReviewCard>
               </div>
             );

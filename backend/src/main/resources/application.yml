@@ -3,13 +3,13 @@ spring:
     url:
     username:
     password:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name:
   jpa:
     hibernate:
       ddl-auto: update
   mail:
     host: smtp.gmail.com
-    username:
+    username: 
     password:
     port: 587
     properties:
@@ -23,4 +23,3 @@ amazonProperties:
   secretKey:
   bucketName:
   region :
-

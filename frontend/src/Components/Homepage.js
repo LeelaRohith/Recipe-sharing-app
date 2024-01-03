@@ -94,6 +94,8 @@ export default function Homepage() {
                 userfirstname={userfirstname}
                 userlastname={userlastname}
                 image={imageData[item.image]}
+                type="view"
+                userid={item.currentuserid}
               ></RecipeReviewCard>
             </div>
           );
