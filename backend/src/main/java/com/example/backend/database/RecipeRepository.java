@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface RecipeRepository  extends JpaRepository<Recipe,Integer>
 {
     Optional<List<Recipe>> findByUserId(Integer userId);
+    Optional<Recipe> findById(Integer id);
+    Optional<Recipe> findByName(String name);
 }

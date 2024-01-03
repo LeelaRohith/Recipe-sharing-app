@@ -29,7 +29,8 @@ public class Recipe {
     @Column(name = "cookingInstructions", columnDefinition = "TEXT")
     private String cookingInstructions;
     private String image;
-    private List<String> ingredients;
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Ingredients> ingredients;
     @ManyToOne
     @JoinColumn(name="user_id")
     private User user;

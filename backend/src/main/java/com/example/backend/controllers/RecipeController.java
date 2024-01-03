@@ -1,11 +1,11 @@
 package com.example.backend.controllers;
 
-import com.example.backend.database.Recipe;
-import com.example.backend.database.RecipeRepository;
-import com.example.backend.database.User;
-import com.example.backend.database.UserRepository;
+import com.example.backend.database.*;
 import com.example.backend.service.S3Service;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,34 +28,148 @@ public class RecipeController {
 
     private final UserRepository userRepository;
     private final RecipeRepository recipeRepository;
+    private final IngredientRepository ingredientRepository;
+    Logger logger
+            = LoggerFactory.getLogger(RecipeController.class);
     @Autowired
     private S3Service s3Service;;
 
 
 
 
-    @PostMapping("/addrecipe/{id}")
-    public ResponseEntity<Response> addRecipe(@RequestBody Recipe recipe, @PathVariable Integer id)
+    @PostMapping("/addrecipe/{userid}")
+    public ResponseEntity<Response> addRecipe(@RequestBody Recipe recipe, @PathVariable Integer userid)
     {
-        Optional<User> user = userRepository.findById(id);
+        Optional<User> user = userRepository.findById(userid);
         recipe.setUser(user.get());
 
-        recipeRepository.save(recipe);
-        return ResponseEntity.ok(Response.builder().text("Recipe Added Successfully").build());
+        Recipe savedRecipe = recipeRepository.save(recipe);
+
+        return ResponseEntity.ok(Response.builder().text(savedRecipe.getId().toString()).build());
+    }
+    @PutMapping("/editrecipe/{userid}")
+    public ResponseEntity<Response> editRecipe(@RequestBody RecipeDTO recipe,@PathVariable Integer userid)
+    {
+        Optional<User> user = userRepository.findById(userid);
+
+        Optional<List<Ingredients>> l = ingredientRepository.findByRecipeId(recipe.getId());
+        Recipe editedRecipe = Recipe
+                .builder()
+                .id(recipe.getId())
+                .name(recipe.getName())
+                .date(recipe.getDate())
+                .description(recipe.getDescription())
+                .ingredients(l.get())
+                .user(user.get())
+                .image(recipe.getImage())
+                .cookingInstructions(recipe.getCookingInstructions())
+                .build();
+        recipeRepository.save(editedRecipe);
+        return ResponseEntity.ok(Response.builder().text("Recipe Updated").build());
+    }
+    @Transactional
+    @PostMapping("/delete/{userid}")
+    public ResponseEntity<Response> deleteRecipe(@RequestBody Recipe recipe,@PathVariable Integer userid)
+    {
+
+
+        ingredientRepository.deleteByRecipeId(recipe.getId());
+        recipeRepository.deleteById(recipe.getId());
+        return ResponseEntity.ok(Response.builder().text("Recipe Deleted").build());
+
+    }
+    @PostMapping("/addingredients/{recipeid}")
+    public ResponseEntity<Response> addIngredients(@RequestBody IngredientRequest ingredients,@PathVariable Integer recipeid)
+    {
+        Optional<Recipe> recipe = recipeRepository.findById(recipeid);
+//        for(int i=0;i<ingredients.size();i++)
+//        {
+//            ingredients.get(i).setRecipe(recipe.get());
+//            ingredientRepository.save(ingredients);
+//
+//        }
+        for(int i=0;i<ingredients.ingredients.size();i++)
+        {
+           Ingredients in =  Ingredients.builder().ingredient(ingredients.ingredients.get(i)).recipe(recipe.get()).build();
+           ingredientRepository.save(in);
+        }
+
+        return ResponseEntity.ok(Response.builder().text("Ingredients Added Successfully").build());
     }
 
 
     @GetMapping("/currentuserrecipes/{id}")
-    public ResponseEntity<List<Recipe>> getCurrentUserRecipes(@PathVariable Integer id)
+    public ResponseEntity<List<RecipeDTO>> getCurrentUserRecipes(@PathVariable Integer id)
     {
         Optional<List<Recipe>> l = recipeRepository.findByUserId(id);
-        return ResponseEntity.ok(l.get());
+         List<RecipeDTO> currentUserRecipes = new ArrayList<>();
+       for(int i=0;i<l.get().size();i++)
+       {
+           Optional<List<Ingredients>> ingredients=ingredientRepository.findByRecipeId(l.get().get(i).getId());
+           l.get().get(i).setIngredients(ingredients.get());
+           List<IngredientsDTO> ingredientsDTO = new ArrayList<>();
+           for(int j=0;j<ingredients.get().size();j++)
+           {
+               ingredientsDTO.add(IngredientsDTO
+                       .builder()
+                       .ingredient(ingredients.get().get(j).getIngredient())
+                       .build());
+           }
+           RecipeDTO r = RecipeDTO
+                   .builder()
+                   .id(l.get().get(i).getId())
+                   .name(l.get().get(i).getName())
+                   .date(l.get().get(i).getDate())
+                   .description(l.get().get(i).getDescription())
+                   .cookingInstructions(l.get().get(i).getCookingInstructions())
+                   .ingredients(ingredientsDTO)
+                   .image(l.get().get(i).getImage())
+                   .build();
+           currentUserRecipes.add(r);
+//           logger.info(String.valueOf(l.get().get(i).getId()));
+//           logger.info(String.valueOf(l.get().get(i).getName()));
+//           logger.info(String.valueOf(l.get().get(i).getDescription()));
+//           logger.info(String.valueOf(l.get().get(i).getCookingInstructions()));
+//           logger.info(String.valueOf(l.get().get(i).getIngredients().size()));
+       }
+        return ResponseEntity.ok(currentUserRecipes);
     }
     @GetMapping("/allrecipes")
-    public ResponseEntity<List<Recipe>> getallRecipes()
+    public ResponseEntity<List<RecipeDTO>> getallRecipes()
     {
         List<Recipe> l =recipeRepository.findAll();
-        return ResponseEntity.ok(l);
+        List<RecipeDTO> allRecipes = new ArrayList<>();
+        for(int i=0;i<l.size();i++)
+        {
+            Optional<List<Ingredients>> ingredients=ingredientRepository.findByRecipeId(l.get(i).getId());
+            l.get(i).setIngredients(ingredients.get());
+            List<IngredientsDTO> ingredientsDTO = new ArrayList<>();
+            for(int j=0;j<ingredients.get().size();j++)
+            {
+                ingredientsDTO.add(IngredientsDTO
+                        .builder()
+                        .ingredient(ingredients.get().get(j).getIngredient())
+                        .build());
+            }
+            RecipeDTO r = RecipeDTO
+                    .builder()
+                    .id(l.get(i).getId())
+                    .name(l.get(i).getName())
+                    .date(l.get(i).getDate())
+                    .description(l.get(i).getDescription())
+                    .cookingInstructions(l.get(i).getCookingInstructions())
+                    .ingredients(ingredientsDTO)
+                    .image(l.get(i).getImage())
+                    .build();
+            allRecipes.add(r);
+//            logger.info(String.valueOf(l.get(i).getId()));
+//            logger.info(String.valueOf(l.get(i).getName()));
+//            logger.info(String.valueOf(l.get(i).getDescription()));
+//            logger.info(String.valueOf(l.get(i).getCookingInstructions()));
+//            logger.info(String.valueOf(l.get(i).getIngredients().size()));
+        }
+        return ResponseEntity.ok(allRecipes);
+
     }
     @PostMapping("/upload")
     public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file){

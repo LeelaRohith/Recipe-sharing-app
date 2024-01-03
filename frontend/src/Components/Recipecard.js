@@ -42,15 +42,15 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 }));
 
 export default function RecipeReviewCard(props) {
-  const [open, setOpen] = React.useState(false);
-  const [imageData, setImageData] = useState(null);
+  // const [open, setOpen] = React.useState(false);
+  // const [imageData, setImageData] = useState(null);
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-  const handleClose = () => {
-    setOpen(false);
-  };
+  // const handleClickOpen = () => {
+  //   setOpen(true);
+  // };
+  // const handleClose = () => {
+  //   setOpen(false);
+  // };
   return (
     <Card sx={{ maxWidth: 345 }}>
       <CardHeader
@@ -60,14 +60,7 @@ export default function RecipeReviewCard(props) {
           </Avatar>
         }
         title={props.details.name}
-        subheader={
-          "Uploaded by " +
-          props.userfirstname +
-          " " +
-          props.userlastname +
-          " On " +
-          props.details.date
-        }
+        subheader={props.userfirstname + " " + props.userlastname}
       />
       <CardMedia
         component="img"
@@ -80,55 +73,204 @@ export default function RecipeReviewCard(props) {
           {props.details.description}
         </Typography>
         <br></br>
-        <div style={{ textAlign: "center" }}>
-          <Button variant="contained" onClick={handleClickOpen}>
-            View Recipe
-          </Button>
-          <BootstrapDialog
-            onClose={handleClose}
-            aria-labelledby="customized-dialog-title"
-            open={open}
-          >
-            <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">
-              {props.title}
-            </DialogTitle>
-            <IconButton
-              aria-label="close"
-              onClick={handleClose}
-              sx={{
-                position: "absolute",
-                right: 8,
-                top: 8,
-                color: (theme) => theme.palette.grey[500],
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-            <DialogContent dividers>
-              <Typography gutterBottom>
-                Cras mattis consectetur purus sit amet fermentum. Cras justo
-                odio, dapibus ac facilisis in, egestas eget quam. Morbi leo
-                risus, porta ac consectetur ac, vestibulum at eros.
-              </Typography>
-              <Typography gutterBottom>
-                Praesent commodo cursus magna, vel scelerisque nisl consectetur
-                et. Vivamus sagittis lacus vel augue laoreet rutrum faucibus
-                dolor auctor.
-              </Typography>
-              <Typography gutterBottom>
-                Aenean lacinia bibendum nulla sed consectetur. Praesent commodo
-                cursus magna, vel scelerisque nisl consectetur et. Donec sed
-                odio dui. Donec ullamcorper nulla non metus auctor fringilla.
-              </Typography>
-            </DialogContent>
-            <DialogActions>
-              <Button autoFocus onClick={handleClose}>
-                Save changes
-              </Button>
-            </DialogActions>
-          </BootstrapDialog>
-        </div>
       </CardContent>
     </Card>
+  );
+}
+function Viewrecipe() {
+  const [open, setOpen] = React.useState(false);
+  // const [imageData, setImageData] = useState(null);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+  const handleClose = () => {
+    setOpen(false);
+  };
+  return (
+    <div style={{ textAlign: "center" }}>
+      <Button variant="contained" onClick={handleClickOpen}>
+        View Recipe
+      </Button>
+      <BootstrapDialog
+        onClose={handleClose}
+        aria-labelledby="customized-dialog-title"
+        open={open}
+      >
+        <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">
+          {props.details.name}
+          <br></br>
+          <sub>
+            Uploaded by {props.userfirstname} {props.userlastname} on{" "}
+            {props.details.date}
+          </sub>
+        </DialogTitle>
+
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+        <DialogContent dividers>
+          <h3>Description</h3>
+          <br></br>
+          <Typography gutterBottom>{props.details.description}</Typography>
+          <br></br>
+          <h3>Ingredients</h3>
+          <br></br>
+
+          <ul>
+            {props.details.ingredients &&
+              props.details.ingredients.map((item, index) => {
+                return (
+                  <li key={index}>
+                    <Typography>{item.ingredient}</Typography>
+                  </li>
+                );
+              })}
+          </ul>
+
+          <br></br>
+          <h3>Cooking Instructions</h3>
+          <br></br>
+          <Typography gutterBottom>
+            {props.details.cookingInstructions}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button autoFocus onClick={handleClose}>
+            Save changes
+          </Button>
+        </DialogActions>
+      </BootstrapDialog>
+    </div>
+  );
+}
+function Editform() {
+  const [open, setOpen] = React.useState(false);
+  // const [imageData, setImageData] = useState(null);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+  const handleClose = () => {
+    setOpen(false);
+  };
+  return (
+    <React.Fragment>
+      <Button variant="outlined" onClick={handleClickOpen}>
+        Add New Recipe
+      </Button>
+      <Dialog open={open} onClose={handleClose} fullWidth>
+        <DialogTitle>New Recipe</DialogTitle>
+        <DialogContent>
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              type="text"
+              id="name"
+              label="Name"
+              name="name"
+              autoComplete="name"
+              autoFocus
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              type="text"
+              id="description"
+              label="Describe the recipe"
+              name="description"
+              autoComplete="description"
+              autoFocus
+            />
+            <Stack direction="column" spacing={1}>
+              {ingredients.map((ingredient, index) => (
+                <Chip
+                  label={ingredient}
+                  onDelete={() => handleDelete(ingredient)}
+                  key={index}
+                />
+              ))}
+            </Stack>
+
+            <TextField
+              margin="normal"
+              required={ingredients.length === 0}
+              fullWidth
+              type="text"
+              id="ingredient"
+              label="Add the list of ingredients"
+              name="ingredient"
+              autoComplete="ingredient"
+              autoFocus
+              onChange={(e) => {
+                setNewingredient(e.target.value);
+              }}
+            />
+            <div style={{ textAlign: "center" }}>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setIngredients((current) => [...current, newingredient]);
+                }}
+              >
+                Add
+              </Button>
+            </div>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              multiline
+              rows={10}
+              type="text"
+              id="cookinginstructions"
+              label="Cooking Instructions"
+              name="cookinginstructions"
+              autoComplete="cookinginstructions"
+              autoFocus
+            />
+            <div style={{ textAlign: "center" }}>
+              <Button
+                component="label"
+                variant="contained"
+                startIcon={<CloudUploadIcon />}
+              >
+                Upload Image
+                <VisuallyHiddenInput type="file" onChange={handleFileChange} />
+              </Button>
+            </div>
+            <br></br>
+            {uploadedImage == null ? null : (
+              <img
+                src={uploadedImage}
+                alt="Uploaded"
+                style={{ maxWidth: "100%", maxHeight: "300px" }}
+              />
+            )}
+            <p style={{ textAlign: "center" }}>{imagename}</p>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+            >
+              SUBMIT RECIPE
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
+    </React.Fragment>
   );
 }

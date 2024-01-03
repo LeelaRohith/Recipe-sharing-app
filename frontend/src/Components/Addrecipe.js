@@ -148,14 +148,17 @@ export default function FormDialog() {
       name: data.get("name"),
       date: todaydate,
       description: data.get("description"),
-      ingredients: ingredients,
       cookingInstructions: data.get("cookinginstructions"),
       image: imageuploadResponse.data,
     };
-
     const response = await axios.post(
       "http://localhost:8080/api/v1/user/addrecipe/" + currentuserid,
       userEnteredRecipe,
+      { headers }
+    );
+    const addingredientsResponse = await axios.post(
+      "http://localhost:8080/api/v1/user/addingredients/" + response.data.text,
+      { ingredients: ingredients },
       { headers }
     );
     enqueueSnackbar(response.data.text, {
@@ -184,9 +187,6 @@ export default function FormDialog() {
               name="name"
               autoComplete="name"
               autoFocus
-              // onChange={(e) => {
-              //   setRecipe({ ...recipe, name: e.target.value });
-              // }}
             />
             <TextField
               margin="normal"
@@ -198,9 +198,6 @@ export default function FormDialog() {
               name="description"
               autoComplete="description"
               autoFocus
-              // onChange={(e) => {
-              //   setRecipe({ ...recipe, description: e.target.value });
-              // }}
             />
             <Stack direction="column" spacing={1}>
               {ingredients.map((ingredient, index) => (
@@ -248,9 +245,6 @@ export default function FormDialog() {
               name="cookinginstructions"
               autoComplete="cookinginstructions"
               autoFocus
-              // onChange={(e) => {
-              //   setRecipe({ ...recipe, description: e.target.value });
-              // }}
             />
             <div style={{ textAlign: "center" }}>
               <Button
@@ -280,104 +274,8 @@ export default function FormDialog() {
               SUBMIT RECIPE
             </Button>
           </Box>
-          {/* <DialogContentText>Name</DialogContentText>
-          <br></br>
-
-          
-        
-
-          
-          <DialogContentText>Ingredients</DialogContentText>
-          {ingredients.length === 0 ? null : <br></br>}
-          
-          <br></br>
-          <TextField
-            required={ingredients.length === 0}
-            style={{ marginBottom: "15px" }}
-            fullWidth
-            label="Add ingredient"
-            id="fullWidth"
-            onChange={(e) => {
-              setNewingredient(e.target.value);
-            }}
-          />
-          <div style={{ textAlign: "center" }}>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setIngredients((current) => [...current, newingredient]);
-              }}
-            >
-              Add
-            </Button>
-          </div> */}
-
-          {/* <br></br>
-          <DialogContentText>Cooking Instructions</DialogContentText>
-          <br></br>
-          <TextField
-            id="outlined-multiline-static"
-            label="Add Cooking Instructions"
-            multiline
-            rows={10}
-            defaultValue=""
-            required
-            onChange={(e) => {
-              setRecipe({ ...recipe, cookingInstructions: e.target.value });
-            }}
-          />
-          <br></br>
-          <br></br>
-          <div style={{ textAlign: "center" }}>
-            <Button
-              component="label"
-              variant="contained"
-              startIcon={<CloudUploadIcon />}
-            >
-              Upload Image
-              <VisuallyHiddenInput type="file" onChange={handleFileChange} />
-            </Button>
-          </div>
-          <br></br>
-          {uploadedImage == null ? null : (
-            <img
-              src={uploadedImage}
-              alt="Uploaded"
-              style={{ maxWidth: "100%", maxHeight: "300px" }}
-            />
-          )}
-          <p style={{ textAlign: "center" }}>{imagename}</p>
-          <br></br>
-
-          <div style={{ textAlign: "center" }}>
-            <Button
-              variant="contained"
-              style={{ marginBottom: "8px" }}
-              onClick={validateform}
-            >
-              Submit
-            </Button>
-          </div> */}
         </DialogContent>
       </Dialog>
-      {/* <Snackbar
-        open={snackbar}
-        autoHideDuration={4000}
-        onClose={() => {
-          setSnackbar(false);
-        }}
-      >
-        <Alert
-          onClose={() => {
-            setSnackbar(false);
-          }}
-          severity="error"
-          sx={{ width: "100%" }}
-          autohideduration={4000}
-        >
-          Please fill all the fields and upload image to submit your recipe
-        </Alert>
-      </Snackbar> */}
     </React.Fragment>
   );
 }

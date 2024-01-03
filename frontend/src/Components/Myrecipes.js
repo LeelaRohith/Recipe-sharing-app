@@ -37,7 +37,7 @@ export default function Myrecipes() {
         headers,
       }
     );
-    //   console.log(recipeResponse.data);
+
     setRecipedetails(recipeResponse.data);
     recipeResponse.data.map(async (item, index) => {
       const image = item.image;
@@ -81,7 +81,7 @@ export default function Myrecipes() {
     // return () => {
     //   URL.revokeObjectURL(imageData);
     // };
-  }, [recipedetails]);
+  }, []);
 
   return (
     <div>

@@ -26,6 +26,7 @@ export default function Homepage() {
     setCurrentuseremail(res.data.email);
     setCurrentuserid(res.data.id);
     setUserfirstname(res.data.firstname);
+    setUserlastname(res.data.lastname);
 
     const recipeResponse = await axios.get(
       "http://localhost:8080/api/v1/user/allrecipes",
@@ -55,7 +56,7 @@ export default function Homepage() {
   };
   useEffect(() => {
     fetchData();
-  }, [recipedetails]);
+  }, []);
   return (
     <div>
       <PrimarySearchAppBar></PrimarySearchAppBar>
