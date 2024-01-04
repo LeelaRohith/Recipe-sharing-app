@@ -17,9 +17,9 @@ import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import axios from "axios";
+import { TailSpin } from "react-loader-spinner";
 import { useSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 
 function Copyright(props) {
   return (
@@ -39,50 +39,21 @@ function Copyright(props) {
   );
 }
 
-// TODO remove, this demo shouldn't need to reset the theme.
-
 const defaultTheme = createTheme();
 
 export default function SignIn() {
-  const [base, setBase] = useState("");
-
-  // const [imageData, setImageData] = useState(null);
-
-  //
-  // useEffect(() => {
-  //   const fetchImage = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         "http://localhost:8080/download/1668517537383.jpg",
-  //         { responseType: "arraybuffer" } // Specify the response type as arraybuffer
-  //       );
-
-  //       const data = new Blob([response.data]);
-  //       const imageUrl = URL.createObjectURL(data);
-  //       setImageData(imageUrl);
-  //     } catch (error) {
-  //       console.error("Error fetching image:", error);
-  //     }
-  //   };
-
-  //   fetchImage();
-
-  //   return () => {
-  //     URL.revokeObjectURL(imageData);
-  //   };
-  // }, []);
-  //  console.log(imageData);
-
   const { enqueueSnackbar } = useSnackbar();
+  const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
   const handleSubmit = (event) => {
+    setLoading(true);
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const user = { email: data.get("email"), password: data.get("password") };
     axios
       .post("http://localhost:8080/api/v1/auth/authenticate", user)
       .then(function (response) {
-        console.log(response.data.token);
+        //console.log(response.data.token);
         localStorage.setItem("token", response.data.token);
         enqueueSnackbar("Login Success", {
           variant: "success",
@@ -91,6 +62,7 @@ export default function SignIn() {
         navigate("/homepage");
       })
       .catch(function (error) {
+        setLoading(false);
         enqueueSnackbar("Invalid Credentials", {
           variant: "error",
           autoHideDuration: 1000,
@@ -156,18 +128,35 @@ export default function SignIn() {
                 id="password"
                 autoComplete="current-password"
               />
-              <FormControlLabel
-                control={<Checkbox value="remember" color="primary" />}
-                label="Remember me"
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-              >
-                Sign In
-              </Button>
+
+              {loading ? (
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                >
+                  <TailSpin
+                    visible={loading}
+                    height="30"
+                    width="30"
+                    color="white"
+                    ariaLabel="tail-spin-loading"
+                    radius="1"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                  />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                >
+                  SIGN IN
+                </Button>
+              )}
               <Grid container>
                 <Grid item xs>
                   <Link href="/forgotpassword" variant="body2">

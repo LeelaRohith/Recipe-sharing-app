@@ -16,6 +16,7 @@ import IconButton from "@mui/material/IconButton";
 import axios from "axios";
 import { useSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
+import { TailSpin } from "react-loader-spinner";
 
 // TODO remove, this demo shouldn't need to reset the theme.
 
@@ -24,14 +25,18 @@ const defaultTheme = createTheme();
 export default function Otp() {
   const { enqueueSnackbar } = useSnackbar();
   const [updatepassword, setUpdatepassword] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [updatebuttonloading, setUpdatebuttonloading] = React.useState(false);
   const navigate = useNavigate();
   const handleSubmit = (event) => {
+    setLoading(true);
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const otp = { otp: data.get("otp") };
     axios
       .post("http://localhost:8080/api/v1/auth/validateotp", otp)
       .then(function (response) {
+        response.status === 204 ? setLoading(false) : setLoading(false);
         response.status === 204
           ? enqueueSnackbar("Invalid Otp", {
               variant: "error",
@@ -40,6 +45,7 @@ export default function Otp() {
           : setUpdatepassword(true);
       })
       .catch(function (error) {
+        setLoading(false);
         enqueueSnackbar("Interal Sever Error", {
           variant: "error",
           autoHideDuration: 1000,
@@ -47,6 +53,7 @@ export default function Otp() {
       });
   };
   const handleUpdatepassword = (event) => {
+    setUpdatebuttonloading(true);
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const updatedPassword = { password: data.get("password") };
@@ -59,9 +66,12 @@ export default function Otp() {
             autoHideDuration: 1000,
           });
           navigate("/");
+        } else {
+          setUpdatebuttonloading(false);
         }
       })
       .catch(function (error) {
+        setUpdatebuttonloading(false);
         enqueueSnackbar("Interal Sever Error", {
           variant: "error",
           autoHideDuration: 1000,
@@ -116,14 +126,34 @@ export default function Otp() {
                 autoFocus
               />
 
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-              >
-                VALIDATE OTP
-              </Button>
+              {loading ? (
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                >
+                  <TailSpin
+                    visible={loading}
+                    height="30"
+                    width="30"
+                    color="white"
+                    ariaLabel="tail-spin-loading"
+                    radius="1"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                  />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                >
+                  SEND OTP
+                </Button>
+              )}
             </Box>
             {updatepassword ? (
               <Box
@@ -143,14 +173,34 @@ export default function Otp() {
                   autoFocus
                 />
 
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  sx={{ mt: 3, mb: 2 }}
-                >
-                  UPDATE PASSWORD
-                </Button>
+                {updatebuttonloading ? (
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 3, mb: 2 }}
+                  >
+                    <TailSpin
+                      visible={updatebuttonloading}
+                      height="30"
+                      width="30"
+                      color="white"
+                      ariaLabel="tail-spin-loading"
+                      radius="1"
+                      wrapperStyle={{}}
+                      wrapperClass=""
+                    />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 3, mb: 2 }}
+                  >
+                    UPDATE PASSWORD
+                  </Button>
+                )}
               </Box>
             ) : null}
           </Box>

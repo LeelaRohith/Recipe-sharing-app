@@ -17,6 +17,7 @@ import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { TailSpin } from "react-loader-spinner";
 
 function Copyright(props) {
   return (
@@ -41,9 +42,11 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function SignUp() {
+  const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const handleSubmit = (event) => {
+    setLoading(true);
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const user = {
@@ -62,7 +65,9 @@ export default function SignUp() {
         });
         navigate("/");
       })
-      .catch(function (error) {});
+      .catch(function (error) {
+        setLoading(false);
+      });
   };
 
   return (
@@ -143,15 +148,36 @@ export default function SignUp() {
                   />
                 </Grid>
               </Grid>
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-                onSubmit={handleSubmit}
-              >
-                Sign Up
-              </Button>
+              {loading ? (
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                  onSubmit={handleSubmit}
+                >
+                  <TailSpin
+                    visible={loading}
+                    height="30"
+                    width="30"
+                    color="white"
+                    ariaLabel="tail-spin-loading"
+                    radius="1"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                  />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                  onSubmit={handleSubmit}
+                >
+                  SIGN UP
+                </Button>
+              )}
               <Grid container justifyContent="flex-end">
                 <Grid item>
                   <Link href="/" variant="body2">

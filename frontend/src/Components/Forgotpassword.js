@@ -16,6 +16,7 @@ import IconButton from "@mui/material/IconButton";
 import axios from "axios";
 import { useSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
+import { TailSpin } from "react-loader-spinner";
 
 // TODO remove, this demo shouldn't need to reset the theme.
 
@@ -23,15 +24,17 @@ const defaultTheme = createTheme();
 
 export default function Forgotpassword() {
   const { enqueueSnackbar } = useSnackbar();
-
+  const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
   const handleSubmit = (event) => {
+    setLoading(true);
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const user = { email: data.get("email") };
     axios
       .post("http://localhost:8080/api/v1/auth/resetpassword", user)
       .then(function (response) {
+        response.status === 204 ? setLoading(false) : setLoading(false);
         response.status === 204
           ? enqueueSnackbar("User Doesn't exist", {
               variant: "error",
@@ -40,6 +43,7 @@ export default function Forgotpassword() {
           : navigate("/otp");
       })
       .catch(function (error) {
+        setLoading(false);
         enqueueSnackbar("Internal Server error", {
           variant: "error",
           autoHideDuration: 1000,
@@ -94,15 +98,34 @@ export default function Forgotpassword() {
                 autoComplete="email"
                 autoFocus
               />
-
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-              >
-                SEND OTP
-              </Button>
+              {loading ? (
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                >
+                  <TailSpin
+                    visible={loading}
+                    height="30"
+                    width="30"
+                    color="white"
+                    ariaLabel="tail-spin-loading"
+                    radius="1"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                  />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                >
+                  SEND OTP
+                </Button>
+              )}
             </Box>
           </Box>
         </Container>

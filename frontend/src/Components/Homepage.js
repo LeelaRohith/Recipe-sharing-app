@@ -3,28 +3,30 @@ import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import SearchIcon from "@mui/icons-material/Search";
 import RecipeReviewCard from "./Recipecard";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 export default function Homepage() {
   const [recipedetails, setRecipedetails] = useState([]);
-  const [currentuseremail, setCurrentuseremail] = useState("");
-  const [currentuserid, setCurrentuserid] = useState("");
+  const [filteredrecipes, setFilteredrecipes] = useState([]);
   const [userfirstname, setUserfirstname] = useState("");
   const [userlastname, setUserlastname] = useState("");
-  const [imageUrl, setImageUrl] = useState(null);
   const [imageData, setImageData] = useState({});
-  const headers = {
-    Authorization: "Bearer " + localStorage.getItem("token"),
+  const handleSearch = (e) => {
+    const searchQuery = e.target.value.toLowerCase();
+    console.log(searchQuery);
+    const filteredRecipes = recipedetails.filter((recipe) =>
+      recipe.name.toLowerCase().includes(searchQuery)
+    );
+    setFilteredrecipes(filteredRecipes);
   };
-  //const allRecipes = ["a", "a", "a", "a", "a", "a", "a"];
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    const headers = {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    };
     const res = await axios.get("http://localhost:8080/api/v1/user", {
       headers,
     });
 
-    //console.log(response.data);
-    setCurrentuseremail(res.data.email);
-    setCurrentuserid(res.data.id);
     setUserfirstname(res.data.firstname);
     setUserlastname(res.data.lastname);
 
@@ -48,15 +50,16 @@ export default function Homepage() {
         );
         const data = new Blob([response.data]);
         const imageUrl = URL.createObjectURL(data);
-        setImageUrl(imageUrl);
+
         // console.log(image);
         setImageData((prev) => ({ ...prev, [image]: imageUrl }));
       }
     });
-  };
+  }, []);
+
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
   return (
     <div>
       <PrimarySearchAppBar></PrimarySearchAppBar>
@@ -65,6 +68,7 @@ export default function Homepage() {
         <TextField
           id="input-with-icon-textfield"
           label="Search Recipes"
+          onChange={handleSearch}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -86,20 +90,51 @@ export default function Homepage() {
           gap: "20px",
         }}
       >
-        {recipedetails.map((item, index) => {
-          return (
-            <div key={index}>
-              <RecipeReviewCard
-                details={item}
-                userfirstname={userfirstname}
-                userlastname={userlastname}
-                image={imageData[item.image]}
-                type="view"
-                userid={item.currentuserid}
-              ></RecipeReviewCard>
-            </div>
-          );
-        })}
+        {filteredrecipes.length > 0
+          ? filteredrecipes.map((item, index) => {
+              return (
+                <div key={index}>
+                  <RecipeReviewCard
+                    details={item}
+                    userfirstname={userfirstname}
+                    userlastname={userlastname}
+                    image={imageData[item.image]}
+                    type="view"
+                    userid={item.currentuserid}
+                  ></RecipeReviewCard>
+                </div>
+              );
+            })
+          : recipedetails.map((item, index) => {
+              return (
+                <div key={index}>
+                  <RecipeReviewCard
+                    details={item}
+                    userfirstname={userfirstname}
+                    userlastname={userlastname}
+                    image={imageData[item.image]}
+                    type="view"
+                    userid={item.currentuserid}
+                  ></RecipeReviewCard>
+                </div>
+              );
+            })}
+        {/* {filteredrecipes.length === 0 ? <div>No Results</div> : null} */}
+        {/* {filteredrecipes.length === 0 &&
+          recipedetails.map((item, index) => {
+            return (
+              <div key={index}>
+                <RecipeReviewCard
+                  details={item}
+                  userfirstname={userfirstname}
+                  userlastname={userlastname}
+                  image={imageData[item.image]}
+                  type="view"
+                  userid={item.currentuserid}
+                ></RecipeReviewCard>
+              </div>
+            );
+          })} */}
       </div>
     </div>
   );

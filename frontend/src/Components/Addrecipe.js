@@ -2,19 +2,19 @@ import * as React from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
+
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
+
 import DialogTitle from "@mui/material/DialogTitle";
-import { Typography } from "@mui/material";
+
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import Snackbar from "@mui/material/Snackbar";
+import { TailSpin } from "react-loader-spinner";
 import MuiAlert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useSnackbar } from "notistack";
 
@@ -29,20 +29,16 @@ const VisuallyHiddenInput = styled("input")({
   whiteSpace: "nowrap",
   width: 1,
 });
-const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
-export default function FormDialog() {
+
+export default function FormDialog(props) {
   const [imagename, setImagename] = React.useState("");
   const [open, setOpen] = React.useState(false);
-
-  const [uploadedImage, setUploadedImage] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [uploadedImage, setUploadedImage] = React.useState(null);
   const [currentuseremail, setCurrentuseremail] = useState("");
   const [currentuserid, setCurrentuserid] = useState("");
   const [file, setFile] = useState(null);
-  const headers = {
-    Authorization: "Bearer " + localStorage.getItem("token"),
-  };
+
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -86,7 +82,7 @@ export default function FormDialog() {
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     // Do something with the selected file, such as upload or display it
-    console.log("Selected File:", selectedFile);
+
     setFile(selectedFile);
 
     displayImage(selectedFile);
@@ -110,14 +106,17 @@ export default function FormDialog() {
     reader.onload = (e) => {
       const imageDataURL = e.target.result.toString();
       // Update state or directly display the image as needed
-      console.log("Image Data URL:", imageDataURL);
+
       setUploadedImage(imageDataURL);
     };
 
     reader.readAsDataURL(file);
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    const headers = {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    };
     const res = await axios.get("http://localhost:8080/api/v1/user", {
       headers,
     });
@@ -126,46 +125,88 @@ export default function FormDialog() {
 
     setCurrentuseremail(res.data.email);
     setCurrentuserid(res.data.id);
-  };
+  }, []);
   useEffect(() => {
     fetchData();
-  }, [currentuseremail]);
+  }, [fetchData]);
 
   const handleSubmit = async (event) => {
+    setLoading(true);
+    const headers = {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    };
     event.preventDefault();
     const data = new FormData(event.currentTarget);
 
     const uploadImageData = new FormData();
     uploadImageData.append("file", file, file.name);
 
-    const imageuploadResponse = await axios.post(
-      "http://localhost:8080/api/v1/user/upload",
-      uploadImageData,
-      { headers }
-    );
+    try {
+      const imageuploadResponse = await axios.post(
+        "http://localhost:8080/api/v1/user/upload",
+        uploadImageData,
+        { headers }
+      );
+      const downloadresponse = await axios.get(
+        "http://localhost:8080/api/v1/user/download/" +
+          imageuploadResponse.data,
+        {
+          responseType: "arraybuffer",
+          headers: { ...headers },
+        } // Specify the response type as arraybuffer
+      );
+      const image = new Blob([downloadresponse.data]);
+      const imageUrl = URL.createObjectURL(image);
 
-    const userEnteredRecipe = {
-      name: data.get("name"),
-      date: todaydate,
-      description: data.get("description"),
-      cookingInstructions: data.get("cookinginstructions"),
-      image: imageuploadResponse.data,
-    };
-    const response = await axios.post(
-      "http://localhost:8080/api/v1/user/addrecipe/" + currentuserid,
-      userEnteredRecipe,
-      { headers }
-    );
-    const addingredientsResponse = await axios.post(
-      "http://localhost:8080/api/v1/user/addingredients/" + response.data.text,
-      { ingredients: ingredients },
-      { headers }
-    );
-    enqueueSnackbar(response.data.text, {
-      variant: "success",
-      autoHideDuration: 5000,
-    });
+      const userEnteredRecipe = {
+        name: data.get("name"),
+        date: todaydate,
+        description: data.get("description"),
+        cookingInstructions: data.get("cookinginstructions"),
+        image: imageuploadResponse.data,
+      };
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/user/addrecipe/" + currentuserid,
+        userEnteredRecipe,
+        { headers }
+      );
+      //console.log(ingredients);
+      const ingredientsJsonform = [];
+      ingredients.forEach((item) => {
+        ingredientsJsonform.push({ ingredient: item });
+      });
+      userEnteredRecipe.ingredients = ingredientsJsonform;
+      userEnteredRecipe.id = response.data.text;
+      props.setRecipedetails((prevArray) => [...prevArray, userEnteredRecipe]);
+      props.setImageData((prev) => ({
+        ...prev,
+        [userEnteredRecipe.image]: imageUrl,
+      }));
+      const addingredientsResponse = await axios.post(
+        "http://localhost:8080/api/v1/user/addingredients/" +
+          response.data.text,
+        { ingredients: ingredients },
+        { headers }
+      );
+      setLoading(false);
+      enqueueSnackbar("Recipe added successfully", {
+        variant: "success",
+        autoHideDuration: 5000,
+      });
+    } catch (error) {
+      setLoading(false);
+      console.log("Internal server error");
+      enqueueSnackbar("Internal Server error", {
+        variant: "Error",
+        autoHideDuration: 5000,
+      });
+    }
+
     setOpen(false);
+    setIngredients([]);
+    setUploadedImage(null);
+    setImagename("");
+    setNewingredient("");
   };
 
   return (
@@ -265,14 +306,34 @@ export default function FormDialog() {
               />
             )}
             <p style={{ textAlign: "center" }}>{imagename}</p>
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              SUBMIT RECIPE
-            </Button>
+            {loading ? (
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                <TailSpin
+                  visible={loading}
+                  height="30"
+                  width="30"
+                  color="white"
+                  ariaLabel="tail-spin-loading"
+                  radius="1"
+                  wrapperStyle={{}}
+                  wrapperClass=""
+                />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                ADD RECIPE
+              </Button>
+            )}
           </Box>
         </DialogContent>
       </Dialog>

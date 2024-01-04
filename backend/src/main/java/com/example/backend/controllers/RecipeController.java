@@ -48,7 +48,7 @@ public class RecipeController {
         return ResponseEntity.ok(Response.builder().text(savedRecipe.getId().toString()).build());
     }
     @PutMapping("/editrecipe/{userid}")
-    public ResponseEntity<Response> editRecipe(@RequestBody RecipeDTO recipe,@PathVariable Integer userid)
+    public ResponseEntity<Response> editRecipe(@RequestBody editRecipeDTO recipe,@PathVariable Integer userid)
     {
         Optional<User> user = userRepository.findById(userid);
 
@@ -64,12 +64,30 @@ public class RecipeController {
                 .image(recipe.getImage())
                 .cookingInstructions(recipe.getCookingInstructions())
                 .build();
-        recipeRepository.save(editedRecipe);
-        return ResponseEntity.ok(Response.builder().text("Recipe Updated").build());
+        Recipe savedRecipe = recipeRepository.save(editedRecipe);
+        return ResponseEntity.ok(Response.builder().text(savedRecipe.getId().toString()).build());
     }
     @Transactional
-    @PostMapping("/delete/{userid}")
-    public ResponseEntity<Response> deleteRecipe(@RequestBody Recipe recipe,@PathVariable Integer userid)
+    @PutMapping("/editingredients/{recipeid}")
+    public ResponseEntity<Response> editIngredients(@RequestBody IngredientRequest ingredients,@PathVariable Integer recipeid)
+    {
+        logger.info("edit ingredients function started");
+        ingredientRepository.deleteByRecipeId(recipeid);
+        Optional<Recipe> recipe = recipeRepository.findById(recipeid);
+        logger.info("Starting of loop");
+//
+        for(int i=0;i<ingredients.ingredients.size();i++)
+        {
+            Ingredients in =  Ingredients.builder().ingredient(ingredients.ingredients.get(i)).recipe(recipe.get()).build();
+            ingredientRepository.save(in);
+        }
+
+        return ResponseEntity.ok(Response.builder().text("Ingredients Added Successfully").build());
+
+    }
+    @Transactional
+    @PostMapping("/delete")
+    public ResponseEntity<Response> deleteRecipe(@RequestBody deleteRecipeDTO recipe)
     {
 
 
@@ -82,12 +100,7 @@ public class RecipeController {
     public ResponseEntity<Response> addIngredients(@RequestBody IngredientRequest ingredients,@PathVariable Integer recipeid)
     {
         Optional<Recipe> recipe = recipeRepository.findById(recipeid);
-//        for(int i=0;i<ingredients.size();i++)
-//        {
-//            ingredients.get(i).setRecipe(recipe.get());
-//            ingredientRepository.save(ingredients);
 //
-//        }
         for(int i=0;i<ingredients.ingredients.size();i++)
         {
            Ingredients in =  Ingredients.builder().ingredient(ingredients.ingredients.get(i)).recipe(recipe.get()).build();
@@ -132,6 +145,7 @@ public class RecipeController {
 //           logger.info(String.valueOf(l.get().get(i).getCookingInstructions()));
 //           logger.info(String.valueOf(l.get().get(i).getIngredients().size()));
        }
+       logger.info("Fetched current user recipes");
         return ResponseEntity.ok(currentUserRecipes);
     }
     @GetMapping("/allrecipes")
@@ -168,6 +182,7 @@ public class RecipeController {
 //            logger.info(String.valueOf(l.get(i).getCookingInstructions()));
 //            logger.info(String.valueOf(l.get(i).getIngredients().size()));
         }
+        logger.info("Fetched all recipes");
         return ResponseEntity.ok(allRecipes);
 
     }

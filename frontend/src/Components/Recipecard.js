@@ -3,38 +3,28 @@ import { styled } from "@mui/material/styles";
 import Card from "@mui/material/Card";
 import CardHeader from "@mui/material/CardHeader";
 import CardMedia from "@mui/material/CardMedia";
-import Menu from "@mui/material/Menu";
+import { TailSpin } from "react-loader-spinner";
 import CardContent from "@mui/material/CardContent";
-import CardActions from "@mui/material/CardActions";
-import Collapse from "@mui/material/Collapse";
+
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { red } from "@mui/material/colors";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import ShareIcon from "@mui/icons-material/Share";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import ClickAwayListener from "@mui/material/ClickAwayListener";
-import Grow from "@mui/material/Grow";
-import Paper from "@mui/material/Paper";
-import Popper from "@mui/material/Popper";
-import MenuItem from "@mui/material/MenuItem";
-import MenuList from "@mui/material/MenuList";
-import { Grid } from "@mui/material";
+
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import MuiAlert from "@mui/material/Alert";
-import Stack from "@mui/material/Stack";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
+import Stack from "@mui/material/Stack";
+
+import { useSnackbar } from "notistack";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
-import { useState, useEffect } from "react";
+
 import axios from "axios";
 
 import CloseIcon from "@mui/icons-material/Close";
@@ -46,17 +36,6 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
     padding: theme.spacing(1),
   },
 }));
-const VisuallyHiddenInput = styled("input")({
-  clip: "rect(0 0 0 0)",
-  clipPath: "inset(50%)",
-  height: 1,
-  overflow: "hidden",
-  position: "absolute",
-  bottom: 0,
-  left: 0,
-  whiteSpace: "nowrap",
-  width: 1,
-});
 
 export default function RecipeReviewCard(props) {
   // const [open, setOpen] = React.useState(false);
@@ -68,6 +47,7 @@ export default function RecipeReviewCard(props) {
   // const handleClose = () => {
   //   setOpen(false);
   // };
+
   return (
     <Card sx={{ maxWidth: 345 }}>
       <CardHeader
@@ -79,12 +59,14 @@ export default function RecipeReviewCard(props) {
         title={props.details.name}
         subheader={props.userfirstname + " " + props.userlastname}
       />
-      <CardMedia
-        component="img"
-        height="194"
-        image={props.image}
-        alt="Paella dish"
-      />
+      {props.image == null ? null : (
+        <CardMedia
+          component="img"
+          height="194"
+          image={props.image}
+          alt="Paella dish"
+        />
+      )}
       <CardContent>
         <Typography variant="body2" color="text.secondary">
           {props.details.description}
@@ -102,6 +84,9 @@ export default function RecipeReviewCard(props) {
             userfirstname={props.userfirstname}
             userlastname={props.userlastname}
             image={props.image}
+            userid={props.userid}
+            setRecipedetails={props.setRecipedetails}
+            recipedetails={props.recipedetails}
           ></Editform>
         )}
       </CardContent>
@@ -109,15 +94,22 @@ export default function RecipeReviewCard(props) {
   );
 }
 function Editform(props) {
+  const [deletenotification, setDeletenotification] = React.useState(false);
   const [open, setOpen] = React.useState(false);
-  const [imageData, setImageData] = useState(null);
-  const [ingredients, setIngredients] = React.useState(
-    props.details.ingredients
-  );
+  const [loading, setLoading] = React.useState(false);
+  const editedIngredients = [];
+  props.details.ingredients.forEach(function (item) {
+    editedIngredients.push(item.ingredient);
+  });
+  const [ingredients, setIngredients] = React.useState(editedIngredients);
   const [newingredient, setNewingredient] = React.useState("");
   const [imagename, setImagename] = React.useState("");
   const [uploadedImage, setUploadedImage] = React.useState(null);
-  const [file, setFile] = useState(null);
+
+  const headers = {
+    Authorization: "Bearer " + localStorage.getItem("token"),
+  };
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -125,71 +117,122 @@ function Editform(props) {
   const handleClose = () => {
     setOpen(false);
   };
-  const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-    // Do something with the selected file, such as upload or display it
-    console.log("Selected File:", selectedFile);
-    setFile(selectedFile);
-
-    displayImage(selectedFile);
-    // axios
-    //   .post("http://localhost:8080/api/v1/user/upload", selectedFile, {
-    //     headers,
-    //   })
-    //   .then(function (response) {
-    //     console.log(response);
-    //     // enqueueSnackbar(response.data.text, {
-    //     //   variant: "success",
-    //     //   autoHideDuration: 5000,
-    //     // });
-    //   })
-    // .catch(function (error) {});
+  const handleDeleteOpen = () => {
+    setDeletenotification(true);
   };
-  const displayImage = (file) => {
-    const reader = new FileReader();
-    setImagename(file.name);
 
-    reader.onload = (e) => {
-      const imageDataURL = e.target.result.toString();
-      // Update state or directly display the image as needed
-      console.log("Image Data URL:", imageDataURL);
-      setUploadedImage(imageDataURL);
-    };
-
-    reader.readAsDataURL(file);
+  const handleDeleteClose = () => {
+    setDeletenotification(false);
   };
+
   const handleDelete = (ingredient) => {
     setIngredients(ingredients.filter((x) => x !== ingredient));
     //console.log(ingredient);
   };
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true);
     const data = new FormData(event.currentTarget);
     const userEnteredRecipe = {
+      id: props.details.id,
       name: data.get("name"),
       date: props.details.date,
       description: data.get("description"),
       cookingInstructions: data.get("cookinginstructions"),
-      image: props.image,
+      image: props.details.image,
     };
-    // console.log(userEnteredRecipe);
-    // console.log(ingredients);
+
+    try {
+      const response = await axios.put(
+        "http://localhost:8080/api/v1/user/editrecipe/" + props.userid,
+        userEnteredRecipe,
+        { headers }
+      );
+
+      const editingredientsResponse = await axios.put(
+        "http://localhost:8080/api/v1/user/editingredients/" +
+          response.data.text,
+        { ingredients: ingredients },
+        { headers }
+      );
+      enqueueSnackbar("Recipe updated successfully", {
+        variant: "success",
+        autoHideDuration: 5000,
+      });
+      setLoading(false);
+    } catch (error) {
+      enqueueSnackbar("Internal Server Error", {
+        variant: "error",
+        autoHideDuration: 5000,
+      });
+      setLoading(false);
+    }
+    props.setRecipedetails((prevRecipes) =>
+      prevRecipes.map((recipe) =>
+        recipe.id === userEnteredRecipe.id
+          ? { ...recipe, name: userEnteredRecipe.name }
+          : recipe
+      )
+    );
+    props.setRecipedetails((prevRecipes) =>
+      prevRecipes.map((recipe) =>
+        recipe.id === userEnteredRecipe.id
+          ? { ...recipe, description: userEnteredRecipe.description }
+          : recipe
+      )
+    );
+    props.setRecipedetails((prevRecipes) =>
+      prevRecipes.map((recipe) =>
+        recipe.id === userEnteredRecipe.id
+          ? {
+              ...recipe,
+              cookingInstructions: userEnteredRecipe.cookingInstructions,
+            }
+          : recipe
+      )
+    );
+    setOpen(false);
   };
-  const handleDeleterecipe = async (event) => {};
+  const handleDeleterecipe = async (event) => {
+    const response = await axios.post(
+      "http://localhost:8080/api/v1/user/delete",
+      { id: props.details.id },
+      { headers }
+    );
+    const r = props.recipedetails.filter(
+      (item) => item.id !== props.details.id
+    );
+    props.setRecipedetails(r);
+
+    enqueueSnackbar(props.details.name + " Recipe Deleted Successfully", {
+      variant: "success",
+      autoHideDuration: 5000,
+    });
+    setDeletenotification(false);
+  };
 
   return (
     <React.Fragment>
-      <Button
-        style={{ marginRight: "15px" }}
-        variant="contained"
-        onClick={handleClickOpen}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
       >
-        Edit
-      </Button>
+        <Button
+          style={{ marginRight: "15px" }}
+          variant="contained"
+          onClick={handleClickOpen}
+        >
+          Edit
+        </Button>
 
-      <Button variant="contained" onClick={handleDeleterecipe}>
-        Delete
-      </Button>
+        <Button variant="contained" onClick={handleDeleteOpen}>
+          Delete
+        </Button>
+      </div>
       <Dialog open={open} onClose={handleClose} fullWidth>
         <DialogTitle>Edit Recipe</DialogTitle>
         <DialogContent>
@@ -221,7 +264,7 @@ function Editform(props) {
             <Stack direction="column" spacing={1}>
               {ingredients.map((ingredient, index) => (
                 <Chip
-                  label={ingredient.ingredient}
+                  label={ingredient}
                   onDelete={() => handleDelete(ingredient)}
                   key={index}
                 />
@@ -266,16 +309,7 @@ function Editform(props) {
               autoComplete="cookinginstructions"
               autoFocus
             />
-            <div style={{ textAlign: "center" }}>
-              <Button
-                component="label"
-                variant="contained"
-                startIcon={<CloudUploadIcon />}
-              >
-                Upload Image
-                <VisuallyHiddenInput type="file" onChange={handleFileChange} />
-              </Button>
-            </div>
+
             <br></br>
 
             {uploadedImage === null ? (
@@ -294,16 +328,51 @@ function Editform(props) {
             <p style={{ textAlign: "center" }}>
               {imagename.length === 0 ? props.details.name : imagename}
             </p>
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              SUBMIT RECIPE
-            </Button>
+            {loading ? (
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                <TailSpin
+                  visible={loading}
+                  height="30"
+                  width="30"
+                  color="white"
+                  ariaLabel="tail-spin-loading"
+                  radius="1"
+                  wrapperStyle={{}}
+                  wrapperClass=""
+                />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                SAVE CHANGES
+              </Button>
+            )}
           </Box>
         </DialogContent>
+      </Dialog>
+      <Dialog
+        open={deletenotification}
+        onClose={handleDeleteClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Delete"}</DialogTitle>
+        <DialogContent>Delete the Recipe ?</DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteClose}>Cancel</Button>
+          <Button onClick={handleDeleterecipe} autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
       </Dialog>
     </React.Fragment>
   );
@@ -311,7 +380,6 @@ function Editform(props) {
 
 function Viewrecipe(props) {
   const [open, setOpen] = React.useState(false);
-  // const [imageData, setImageData] = useState(null);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -377,11 +445,6 @@ function Viewrecipe(props) {
             {props.details.cookingInstructions}
           </Typography>
         </DialogContent>
-        {/* <DialogActions>
-          <Button autoFocus onClick={handleClose}>
-            Save changes
-          </Button>
-        </DialogActions> */}
       </BootstrapDialog>
     </div>
   );
