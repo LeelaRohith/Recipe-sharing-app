@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://recipesharingapp.c926esq2uqdw.ap-south-1.rds.amazonaws.com/recipesharingapp
+    url: 
     username: admin
     password: admin1234
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -19,8 +19,8 @@ spring:
           starttls:
             enable: true
 amazonProperties:
-  accessKey: AKIAS4O5WECYIZNZYUEF
-  secretKey: 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
+  accessKey: 
+  secretKey: 
   bucketName: recipesharingapp
   region : ap-south-1
 
