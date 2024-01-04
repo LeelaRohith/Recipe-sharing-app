@@ -1,16 +1,16 @@
 spring:
   datasource:
     url: 
-    username: admin
-    password: admin1234
+    username: 
+    password:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
   mail:
     host: smtp.gmail.com
-    username: leelarohith10@gmail.com
-    password: jksneqomiayyvpyo
+    username: 
+    password:
     port: 587
     properties:
       mail:
@@ -21,6 +21,6 @@ spring:
 amazonProperties:
   accessKey: 
   secretKey: 
-  bucketName: recipesharingapp
-  region : ap-south-1
+  bucketName:
+  region :
 
