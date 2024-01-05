@@ -34,7 +34,10 @@ export default function Otp() {
     const data = new FormData(event.currentTarget);
     const otp = { otp: data.get("otp") };
     axios
-      .post("http://localhost:8080/api/v1/auth/validateotp", otp)
+      .post(
+        "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/auth/validateotp",
+        otp
+      )
       .then(function (response) {
         response.status === 204 ? setLoading(false) : setLoading(false);
         response.status === 204
@@ -58,7 +61,10 @@ export default function Otp() {
     const data = new FormData(event.currentTarget);
     const updatedPassword = { password: data.get("password") };
     axios
-      .post("http://localhost:8080/api/v1/auth/updatepassword", updatedPassword)
+      .post(
+        "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/auth/updatepassword",
+        updatedPassword
+      )
       .then(function (response) {
         if (response.status === 200) {
           enqueueSnackbar("Password Updated Successfully", {
@@ -151,7 +157,7 @@ export default function Otp() {
                   variant="contained"
                   sx={{ mt: 3, mb: 2 }}
                 >
-                  SEND OTP
+                  VALIDATE OTP
                 </Button>
               )}
             </Box>

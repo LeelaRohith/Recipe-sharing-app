@@ -2,13 +2,13 @@ import FormDialog from "./Addrecipe";
 
 import RecipeReviewCard from "./Recipecard";
 import PrimarySearchAppBar from "./Toolbar";
-
+import { TailSpin } from "react-loader-spinner";
 import axios from "axios";
 import { useState, useEffect, useCallback } from "react";
 
 export default function Myrecipes() {
   const [recipedetails, setRecipedetails] = useState([]);
-
+  const [loading, setLoading] = useState(true);
   const [currentuserid, setCurrentuserid] = useState("");
   const [userfirstname, setUserfirstname] = useState("");
   const [userlastname, setUserlastname] = useState("");
@@ -18,9 +18,12 @@ export default function Myrecipes() {
     const headers = {
       Authorization: "Bearer " + localStorage.getItem("token"),
     };
-    const res = await axios.get("http://localhost:8080/api/v1/user", {
-      headers,
-    });
+    const res = await axios.get(
+      "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user",
+      {
+        headers,
+      }
+    );
 
     //console.log(response.data);
 
@@ -29,18 +32,21 @@ export default function Myrecipes() {
     setUserlastname(res.data.lastname);
 
     const recipeResponse = await axios.get(
-      "http://localhost:8080/api/v1/user/currentuserrecipes/" + res.data.id,
+      "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user/currentuserrecipes/" +
+        res.data.id,
       {
         headers,
       }
     );
+    setLoading(false);
 
     setRecipedetails(recipeResponse.data);
     recipeResponse.data.map(async (item, index) => {
       const image = item.image;
 
       const response = await axios.get(
-        "http://localhost:8080/api/v1/user/download/" + image,
+        "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user/download/" +
+          image,
         {
           responseType: "arraybuffer",
           headers: { ...headers },
@@ -70,6 +76,28 @@ export default function Myrecipes() {
         ></FormDialog>
       </div>
       <br></br>
+      {!loading ? null : (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <TailSpin
+            visible={loading}
+            height="30"
+            width="30"
+            color="#1976D2"
+            ariaLabel="tail-spin-loading"
+            radius="1"
+            wrapperStyle={{}}
+            wrapperClass=""
+          />
+          <div>Loading recipes</div>
+        </div>
+      )}
 
       <div
         style={{

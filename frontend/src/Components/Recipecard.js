@@ -60,11 +60,21 @@ export default function RecipeReviewCard(props) {
         subheader={props.userfirstname + " " + props.userlastname}
       />
       {props.image == null ? null : (
+        // <TailSpin
+        //   visible={true}
+        //   height="30"
+        //   width="30"
+        //   color="#1976D2"
+        //   ariaLabel="tail-spin-loading"
+        //   radius="1"
+        //   wrapperStyle={{}}
+        //   wrapperClass=""
+        // />
         <CardMedia
           component="img"
           height="194"
           image={props.image}
-          alt="Paella dish"
+          alt="Recipe image"
         />
       )}
       <CardContent>
@@ -103,8 +113,7 @@ function Editform(props) {
   });
   const [ingredients, setIngredients] = React.useState(editedIngredients);
   const [newingredient, setNewingredient] = React.useState("");
-  const [imagename, setImagename] = React.useState("");
-  const [uploadedImage, setUploadedImage] = React.useState(null);
+  // const [imagename, setImagename] = React.useState("");
 
   const headers = {
     Authorization: "Bearer " + localStorage.getItem("token"),
@@ -144,17 +153,19 @@ function Editform(props) {
 
     try {
       const response = await axios.put(
-        "http://localhost:8080/api/v1/user/editrecipe/" + props.userid,
+        "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user/editrecipe/" +
+          props.userid,
         userEnteredRecipe,
         { headers }
       );
 
       const editingredientsResponse = await axios.put(
-        "http://localhost:8080/api/v1/user/editingredients/" +
+        "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user/editingredients/" +
           response.data.text,
         { ingredients: ingredients },
         { headers }
       );
+      console.log(editingredientsResponse.data);
       enqueueSnackbar("Recipe updated successfully", {
         variant: "success",
         autoHideDuration: 5000,
@@ -195,10 +206,11 @@ function Editform(props) {
   };
   const handleDeleterecipe = async (event) => {
     const response = await axios.post(
-      "http://localhost:8080/api/v1/user/delete",
+      "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user/delete",
       { id: props.details.id },
       { headers }
     );
+    console.log(response.data);
     const r = props.recipedetails.filter(
       (item) => item.id !== props.details.id
     );
@@ -312,22 +324,13 @@ function Editform(props) {
 
             <br></br>
 
-            {uploadedImage === null ? (
-              <img
-                src={props.image}
-                alt="Uploaded"
-                style={{ maxWidth: "100%", maxHeight: "300px" }}
-              />
-            ) : (
-              <img
-                src={uploadedImage}
-                alt="Uploaded"
-                style={{ maxWidth: "100%", maxHeight: "300px" }}
-              />
-            )}
-            <p style={{ textAlign: "center" }}>
-              {imagename.length === 0 ? props.details.name : imagename}
-            </p>
+            <img
+              src={props.image}
+              alt="Uploaded"
+              style={{ maxWidth: "100%", maxHeight: "300px" }}
+            />
+
+            <p style={{ textAlign: "center" }}>{props.details.name}</p>
             {loading ? (
               <Button
                 type="submit"

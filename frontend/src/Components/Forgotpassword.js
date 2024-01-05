@@ -32,7 +32,10 @@ export default function Forgotpassword() {
     const data = new FormData(event.currentTarget);
     const user = { email: data.get("email") };
     axios
-      .post("http://localhost:8080/api/v1/auth/resetpassword", user)
+      .post(
+        "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/auth/resetpassword",
+        user
+      )
       .then(function (response) {
         response.status === 204 ? setLoading(false) : setLoading(false);
         response.status === 204

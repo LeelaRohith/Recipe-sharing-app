@@ -10,7 +10,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import { TailSpin } from "react-loader-spinner";
-import MuiAlert from "@mui/material/Alert";
+
 import Stack from "@mui/material/Stack";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
@@ -35,7 +35,7 @@ export default function FormDialog(props) {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [uploadedImage, setUploadedImage] = React.useState(null);
-  const [currentuseremail, setCurrentuseremail] = useState("");
+
   const [currentuserid, setCurrentuserid] = useState("");
   const [file, setFile] = useState(null);
 
@@ -117,13 +117,15 @@ export default function FormDialog(props) {
     const headers = {
       Authorization: "Bearer " + localStorage.getItem("token"),
     };
-    const res = await axios.get("http://localhost:8080/api/v1/user", {
-      headers,
-    });
+    const res = await axios.get(
+      "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user",
+      {
+        headers,
+      }
+    );
 
     //console.log(response.data);
 
-    setCurrentuseremail(res.data.email);
     setCurrentuserid(res.data.id);
   }, []);
   useEffect(() => {
@@ -143,12 +145,12 @@ export default function FormDialog(props) {
 
     try {
       const imageuploadResponse = await axios.post(
-        "http://localhost:8080/api/v1/user/upload",
+        "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user/upload",
         uploadImageData,
         { headers }
       );
       const downloadresponse = await axios.get(
-        "http://localhost:8080/api/v1/user/download/" +
+        "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user/download/" +
           imageuploadResponse.data,
         {
           responseType: "arraybuffer",
@@ -166,7 +168,8 @@ export default function FormDialog(props) {
         image: imageuploadResponse.data,
       };
       const response = await axios.post(
-        "http://localhost:8080/api/v1/user/addrecipe/" + currentuserid,
+        "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user/addrecipe/" +
+          currentuserid,
         userEnteredRecipe,
         { headers }
       );
@@ -183,11 +186,12 @@ export default function FormDialog(props) {
         [userEnteredRecipe.image]: imageUrl,
       }));
       const addingredientsResponse = await axios.post(
-        "http://localhost:8080/api/v1/user/addingredients/" +
+        "http://recipesharingapp-env.eba-x7bedbpp.ap-south-1.elasticbeanstalk.com/api/v1/user/addingredients/" +
           response.data.text,
         { ingredients: ingredients },
         { headers }
       );
+      console.log(addingredientsResponse.data);
       setLoading(false);
       enqueueSnackbar("Recipe added successfully", {
         variant: "success",

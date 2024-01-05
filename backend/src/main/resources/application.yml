@@ -1,16 +1,16 @@
 spring:
   datasource:
-    url: jdbc:mysql://recipesharingapp.c926esq2uqdw.ap-south-1.rds.amazonaws.com/recipesharingapp
-    username: admin
-    password: admin1234
+    url:
+    username:
+    password:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
   mail:
     host: smtp.gmail.com
-    username: leelarohith10@gmail.com
-    password: jksneqomiayyvpyo
+    username: 
+    password:
     port: 587
     properties:
       mail:
@@ -19,8 +19,10 @@ spring:
           starttls:
             enable: true
 amazonProperties:
-  accessKey: AKIAS4O5WECYIZNZYUEF
-  secretKey: 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
-  bucketName: recipesharingapp
-  region : ap-south-1
+  accessKey:
+  secretKey:
+  bucketName:
+  region :
+server:
+  port : 5000
 

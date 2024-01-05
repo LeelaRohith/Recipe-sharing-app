@@ -6,6 +6,7 @@ import Homepage from "./Components/Homepage";
 import Myrecipes from "./Components/Myrecipes";
 import Forgotpassword from "./Components/Forgotpassword";
 import Otp from "./Components/Otp";
+import Profile from "./Components/Profile";
 function App() {
   return (
     <BrowserRouter>
@@ -14,6 +15,7 @@ function App() {
         <Route path="/signup" element={<SignUp></SignUp>}></Route>
         <Route path="/homepage" element={<Homepage></Homepage>}></Route>
         <Route path="/myrecipes" element={<Myrecipes></Myrecipes>}></Route>
+        <Route path="/profile" element={<Profile></Profile>}></Route>
         <Route
           path="/forgotpassword"
           element={<Forgotpassword></Forgotpassword>}
